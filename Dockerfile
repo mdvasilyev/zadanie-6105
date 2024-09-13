@@ -1,12 +1,8 @@
 FROM golang:latest
 
-RUN apt-get update && apt-get install -y curl gnupg lsb-release ca-certificates
+RUN apt-get update
 
-RUN curl -L https://packagecloud.io/golang-migrate/migrate/gpgkey | apt-key add -
-
-RUN echo "deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/migrate.list
-
-RUN apt-get update && apt-get install -y migrate
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.12.2/migrate.linux-amd64.tar.gz | tar xvz
 
 WORKDIR /app
 
