@@ -2,9 +2,9 @@ FROM golang:latest
 
 RUN apt-get update
 
-RUN wget http://github.com/golang-migrate/migrate/releases/latest/download/migrate.linux-arm64.deb
+RUN wget http://github.com/golang-migrate/migrate/releases/latest/download/migrate.linux-amd64.deb
 
-RUN dpkg -i migrate.linux-arm64.deb
+RUN dpkg -i migrate.linux-amd64.deb
 
 WORKDIR /app
 
