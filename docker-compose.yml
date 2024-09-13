@@ -1,0 +1,21 @@
+services:
+  migrate:
+    image: migrate/migrate
+    entrypoint: [
+      "migrate",
+      "-path", "/migration",
+      "-database", "postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable",
+      "-verbose", "up"
+    ]
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      SERVER_ADDRESS: ${SERVER_ADDRESS}
+      POSTGRES_CONN: "postgres://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}?sslmode=disable"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - migrate
