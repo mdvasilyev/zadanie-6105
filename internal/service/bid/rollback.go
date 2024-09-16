@@ -5,26 +5,23 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 )
 
 func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/json")
 
-	bidId := ctx.Param("bidId")
-	if bidId == "" || len(bidId) > 100 {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid bidId"})
-	}
-
-	newVersion, err := strconv.Atoi(ctx.Param("version"))
-	if err != nil || newVersion < 1 {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Version must be >= 1"})
+	bidId, ok := getBidId(ctx)
+	if !ok {
 		return
 	}
 
-	username := ctx.Query("username")
-	if username == "" {
-		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Username is required"})
+	newVersion, ok := getVersion(ctx)
+	if !ok {
+		return
+	}
+
+	username, ok := getUsername(ctx)
+	if !ok {
 		return
 	}
 

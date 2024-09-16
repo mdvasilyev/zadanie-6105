@@ -9,9 +9,8 @@ import (
 func (s *Service) Status(db *sql.DB, ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/json")
 
-	tenderId := ctx.Param("tenderId")
-	if tenderId == "" || len(tenderId) > 100 {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid tenderId"})
+	tenderId, ok := getTenderId(ctx)
+	if !ok {
 		return
 	}
 

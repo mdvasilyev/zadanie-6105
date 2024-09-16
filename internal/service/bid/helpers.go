@@ -166,3 +166,80 @@ func getBidByIdAndVersion(tx *sql.Tx, ctx *gin.Context, bidId string, version in
 
 	return bid, true
 }
+
+func getTenderId(ctx *gin.Context) (string, bool) {
+	tenderId := ctx.Param("tenderId")
+
+	if tenderId == "" || len(tenderId) > 100 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid tenderId"})
+		return "", false
+	}
+
+	return tenderId, true
+}
+
+func getUsername(ctx *gin.Context) (string, bool) {
+	username := ctx.Query("username")
+
+	if username == "" {
+		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Username is required"})
+		return "", false
+	}
+
+	return username, true
+}
+
+func getLimit(ctx *gin.Context) (int, bool) {
+	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
+
+	if err != nil || limit < 0 || limit > 50 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"reason": "Invalid limit value"})
+		return 0, false
+	}
+
+	return limit, true
+}
+
+func getOffset(ctx *gin.Context) (int, bool) {
+	offset, err := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
+
+	if err != nil || offset < 0 || offset > 1<<31-1 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"reason": "Invalid offset value"})
+		return 0, false
+	}
+
+	return offset, true
+}
+
+func getBidId(ctx *gin.Context) (string, bool) {
+	bidId := ctx.Param("bidId")
+
+	if bidId == "" || len(bidId) > 100 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid bidId"})
+		return "", false
+	}
+
+	return bidId, true
+}
+
+func getStatus(ctx *gin.Context) (string, bool) {
+	status := ctx.Query("status")
+
+	if err := validateStatus(status); status == "" || err != nil {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid status"})
+		return "", false
+	}
+
+	return status, true
+}
+
+func getVersion(ctx *gin.Context) (int, bool) {
+	version, err := strconv.Atoi(ctx.Param("version"))
+
+	if err != nil || version < 1 {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Version must be >= 1"})
+		return 0, false
+	}
+
+	return version, true
+}

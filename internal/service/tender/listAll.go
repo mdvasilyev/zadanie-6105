@@ -5,21 +5,18 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"strconv"
 )
 
 func (s *Service) ListAll(db *sql.DB, ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/json")
 
-	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
-	if err != nil || limit < 0 || limit > 50 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"reason": "Invalid limit value"})
+	limit, ok := getLimit(ctx)
+	if !ok {
 		return
 	}
 
-	offset, err := strconv.Atoi(ctx.DefaultQuery("offset", "0"))
-	if err != nil || offset < 0 || offset > 1<<31-1 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"reason": "Invalid offset value"})
+	offset, ok := getOffset(ctx)
+	if !ok {
 		return
 	}
 
@@ -40,6 +37,8 @@ func (s *Service) ListAll(db *sql.DB, ctx *gin.Context) {
 	}
 
 	var rows *sql.Rows
+	var err error
+
 	if serviceType == "" {
 		rows, err = db.Query(query, TenderStatusPublished, limit, offset)
 	} else {

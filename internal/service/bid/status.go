@@ -9,15 +9,13 @@ import (
 func (s *Service) Status(db *sql.DB, ctx *gin.Context) {
 	ctx.Header("Content-Type", "application/json")
 
-	bidId := ctx.Param("bidId")
-	if bidId == "" || len(bidId) > 100 {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid bidId"})
+	bidId, ok := getBidId(ctx)
+	if !ok {
 		return
 	}
 
-	username := ctx.Query("username")
-	if username == "" {
-		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Username is required"})
+	username, ok := getUsername(ctx)
+	if !ok {
 		return
 	}
 
@@ -25,13 +23,12 @@ func (s *Service) Status(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var authorIdInDb string
-
 	authorId, ok := getAuthorId(db, ctx, username)
 	if !ok {
 		return
 	}
 
+	var authorIdInDb string
 	var status string
 	var tenderId string
 
