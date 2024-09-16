@@ -95,7 +95,7 @@ func insertTender(tx *sql.Tx, ctx *gin.Context, tender Tender) (Tender, bool) {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
 			return tender, false
 		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid organizationId or creatorUsername"})
 		return tender, false
 	}
 
@@ -104,6 +104,10 @@ func insertTender(tx *sql.Tx, ctx *gin.Context, tender Tender) (Tender, bool) {
 
 func insertTenderDiff(tx *sql.Tx, ctx *gin.Context, tender Tender) bool {
 	query := "INSERT INTO tender_diff (id, name, description, status, service_type, version, organization_id, creator_username, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+
+	if tender.Status == "" {
+		tender.Status = TenderStatusCreated
+	}
 
 	_, err := tx.ExecContext(ctx, query, tender.Id, tender.Name, tender.Description, tender.Status, tender.ServiceType, tender.Version+1, tender.OrganizationId, tender.CreatorUsername, tender.CreatedAt)
 	if err != nil {
