@@ -51,13 +51,8 @@ func (s *Service) TenderIdList(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var authorId string
-
-	queryAuthorId := "SELECT id FROM employee WHERE username = $1"
-
-	err = db.QueryRow(queryAuthorId, username).Scan(&authorId)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+	authorId, ok := getAuthorId(db, ctx, username)
+	if !ok {
 		return
 	}
 

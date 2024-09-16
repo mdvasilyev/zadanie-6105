@@ -32,7 +32,10 @@ func (s *Service) ListMy(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var authorId string
+	authorId, ok := getAuthorId(db, ctx, username)
+	if !ok {
+		return
+	}
 
 	getAuthorIDQuery := `SELECT id FROM employee WHERE username = $1`
 

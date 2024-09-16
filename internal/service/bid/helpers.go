@@ -30,3 +30,16 @@ func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
 	}
 	return true
 }
+
+func getAuthorId(db *sql.DB, ctx *gin.Context, username string) (string, bool) {
+	var authorId string
+
+	getAuthorIDQuery := `SELECT id FROM employee WHERE username = $1`
+
+	err := db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+		return "", false
+	}
+	return authorId, true
+}

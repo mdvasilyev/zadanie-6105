@@ -25,14 +25,10 @@ func (s *Service) Status(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var authorId string
 	var authorIdInDb string
 
-	queryAuthorId := "SELECT id FROM employee WHERE username = $1"
-
-	err := db.QueryRow(queryAuthorId, username).Scan(&authorId)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+	authorId, ok := getAuthorId(db, ctx, username)
+	if !ok {
 		return
 	}
 
@@ -41,7 +37,7 @@ func (s *Service) Status(db *sql.DB, ctx *gin.Context) {
 
 	query := "SELECT status, tender_id, author_id FROM bid WHERE id = $1"
 
-	err = db.QueryRow(query, bidId).Scan(&status, &tenderId, &authorIdInDb)
+	err := db.QueryRow(query, bidId).Scan(&status, &tenderId, &authorIdInDb)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 		return
