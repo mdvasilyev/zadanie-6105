@@ -22,16 +22,7 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var userExists bool
-
-	checkUserQuery := `SELECT EXISTS(SELECT 1 FROM employee WHERE username = $1)`
-	err := db.QueryRow(checkUserQuery, username).Scan(&userExists)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
-		return
-	}
-	if !userExists {
-		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+	if userExists := checkUserExistence(db, ctx, username); !userExists {
 		return
 	}
 
@@ -39,7 +30,7 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 
 	queryAuthorId := "SELECT id FROM employee WHERE username = $1"
 
-	err = db.QueryRow(queryAuthorId, username).Scan(&authorId)
+	err := db.QueryRow(queryAuthorId, username).Scan(&authorId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
