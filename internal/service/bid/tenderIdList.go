@@ -16,19 +16,6 @@ func (s *Service) TenderIdList(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var tenderExists bool
-
-	checkTenderQuery := `SELECT EXISTS(SELECT 1 FROM tender WHERE id = $1)`
-	err := db.QueryRow(checkTenderQuery, tenderId).Scan(&tenderExists)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
-		return
-	}
-	if !tenderExists {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
-		return
-	}
-
 	limit, err := strconv.Atoi(ctx.DefaultQuery("limit", "5"))
 	if err != nil || limit < 0 || limit > 50 {
 		ctx.JSON(http.StatusBadRequest, gin.H{"reason": "Invalid limit value"})
@@ -48,6 +35,10 @@ func (s *Service) TenderIdList(db *sql.DB, ctx *gin.Context) {
 	}
 
 	if userExists := checkUserExistence(db, ctx, username); !userExists {
+		return
+	}
+
+	if tenderExists := checkTenderExistence(db, ctx, tenderId); !tenderExists {
 		return
 	}
 

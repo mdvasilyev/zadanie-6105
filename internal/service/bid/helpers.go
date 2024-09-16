@@ -28,8 +28,28 @@ func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return false
 	}
+
 	if !userExists {
 		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+		return false
+	}
+
+	return true
+}
+
+func checkTenderExistence(db *sql.DB, ctx *gin.Context, tenderId string) bool {
+	var tenderExists bool
+
+	query := `SELECT EXISTS(SELECT 1 FROM tender WHERE id = $1)`
+
+	err := db.QueryRow(query, tenderId).Scan(&tenderExists)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		return false
+	}
+
+	if !tenderExists {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
 		return false
 	}
 
