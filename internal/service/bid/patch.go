@@ -27,18 +27,13 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var authorId string
-
-	getAuthorIDQuery := `SELECT id FROM employee WHERE username = $1`
-
-	err := db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
+	authorId, ok := getAuthorId(db, ctx, username)
+	if !ok {
 		return
 	}
 
 	var bidPatch BidPatch
-	if err = ctx.ShouldBindJSON(&bidPatch); err != nil {
+	if err := ctx.ShouldBindJSON(&bidPatch); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request body"})
 		return
 	}

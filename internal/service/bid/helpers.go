@@ -43,3 +43,17 @@ func getAuthorId(db *sql.DB, ctx *gin.Context, username string) (string, bool) {
 	}
 	return authorId, true
 }
+
+func extractBids(ctx *gin.Context, rows *sql.Rows) ([]Bid, bool) {
+	var bids []Bid
+	for rows.Next() {
+		var b Bid
+		err := rows.Scan(&b.Id, &b.Name, &b.Description, &b.Status, &b.TenderId, &b.AuthorType, &b.AuthorId, &b.Version, &b.CreatedAt)
+		if err != nil {
+			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bids not found"})
+			return nil, false
+		}
+		bids = append(bids, b)
+	}
+	return bids, true
+}

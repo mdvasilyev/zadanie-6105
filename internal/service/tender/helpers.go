@@ -38,3 +38,17 @@ func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
 	}
 	return true
 }
+
+func extractTenders(ctx *gin.Context, rows *sql.Rows) ([]Tender, bool) {
+	var tenders []Tender
+	for rows.Next() {
+		var t Tender
+		err := rows.Scan(&t.Id, &t.Name, &t.Description, &t.Status, &t.ServiceType, &t.Version, &t.OrganizationId, &t.CreatorUsername, &t.CreatedAt)
+		if err != nil {
+			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tenders not found"})
+			return nil, false
+		}
+		tenders = append(tenders, t)
+	}
+	return tenders, true
+}
