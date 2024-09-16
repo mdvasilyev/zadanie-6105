@@ -126,3 +126,31 @@ func insertBidDiff(tx *sql.Tx, ctx *gin.Context, bid Bid) bool {
 
 	return true
 }
+
+func getBidById(tx *sql.Tx, ctx *gin.Context, bidId string) (Bid, bool) {
+	query := "SELECT * FROM bid WHERE id = $1"
+
+	var bid Bid
+
+	err := tx.QueryRowContext(ctx, query, bidId).Scan(&bid.Id, &bid.Name, &bid.Description, &bid.Status, &bid.TenderId, &bid.AuthorType, &bid.AuthorId, &bid.Version, &bid.CreatedAt)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
+		return bid, false
+	}
+
+	return bid, true
+}
+
+func getBidByIdAndVersion(tx *sql.Tx, ctx *gin.Context, bidId string, version int) (Bid, bool) {
+	var bid Bid
+
+	query := "SELECT * FROM bid_diff WHERE id = $1 AND version = $2"
+
+	err := tx.QueryRowContext(ctx, query, bidId, version).Scan(&bid.Id, &bid.Name, &bid.Description, &bid.Status, &bid.TenderId, &bid.AuthorType, &bid.AuthorId, &bid.Version, &bid.CreatedAt)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
+		return bid, false
+	}
+
+	return bid, true
+}

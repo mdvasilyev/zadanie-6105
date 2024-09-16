@@ -44,13 +44,8 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	bid := Bid{}
-
-	queryGet := "SELECT * FROM bid WHERE id = $1"
-
-	err = tx.QueryRowContext(ctx, queryGet, bidId).Scan(&bid.Id, &bid.Name, &bid.Description, &bid.Status, &bid.TenderId, &bid.AuthorType, &bid.AuthorId, &bid.Version, &bid.CreatedAt)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
+	bid, ok := getBidById(tx, ctx, bidId)
+	if !ok {
 		return
 	}
 

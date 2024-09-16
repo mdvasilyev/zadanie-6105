@@ -48,13 +48,8 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	var newBid Bid
-
-	queryGetDiff := "SELECT * FROM bid_diff WHERE id = $1 AND version = $2"
-
-	err = tx.QueryRowContext(ctx, queryGetDiff, bidId, newVersion).Scan(&newBid.Id, &newBid.Name, &newBid.Description, &newBid.Status, &newBid.TenderId, &newBid.AuthorType, &newBid.AuthorId, &newBid.Version, &newBid.CreatedAt)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
+	newBid, ok := getBidByIdAndVersion(tx, ctx, bidId, newVersion)
+	if !ok {
 		return
 	}
 

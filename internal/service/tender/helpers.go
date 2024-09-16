@@ -28,9 +28,9 @@ func validateStatus(status string) error {
 }
 
 func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
-	var userExists bool
-
 	query := `SELECT EXISTS(SELECT 1 FROM employee WHERE username = $1)`
+
+	var userExists bool
 
 	err := db.QueryRow(query, username).Scan(&userExists)
 	if err != nil {
@@ -100,4 +100,32 @@ func insertTenderDiff(tx *sql.Tx, ctx *gin.Context, tender Tender) bool {
 	}
 
 	return true
+}
+
+func getTenderById(tx *sql.Tx, ctx *gin.Context, tenderId string) (Tender, bool) {
+	query := "SELECT * FROM tender WHERE id = $1"
+
+	var tender Tender
+
+	err := tx.QueryRowContext(ctx, query, tenderId).Scan(&tender.Id, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.OrganizationId, &tender.CreatorUsername, &tender.CreatedAt)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
+		return tender, false
+	}
+
+	return tender, true
+}
+
+func getTenderByIdAndVersion(tx *sql.Tx, ctx *gin.Context, tenderId string, version int) (Tender, bool) {
+	query := "SELECT * FROM tender_diff WHERE id = $1 AND version = $2"
+
+	var tender Tender
+
+	err := tx.QueryRowContext(ctx, query, tenderId, version).Scan(&tender.Id, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.OrganizationId, &tender.CreatorUsername, &tender.CreatedAt)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
+		return tender, false
+	}
+
+	return tender, true
 }

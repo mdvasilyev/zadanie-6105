@@ -39,13 +39,8 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	tender := Tender{}
-
-	queryGet := "SELECT * FROM tender WHERE id = $1"
-
-	err = tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&tender.Id, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.OrganizationId, &tender.CreatorUsername, &tender.CreatedAt)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
+	tender, ok := getTenderById(tx, ctx, tenderId)
+	if !ok {
 		return
 	}
 
