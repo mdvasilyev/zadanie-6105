@@ -38,11 +38,7 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
 		return
 	}
 
@@ -59,15 +55,11 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGet, bidId).Scan(&currentVersion, &creatorId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
-			return
-		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
 			return
 		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 		return
 	}
 
@@ -87,15 +79,11 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGetDiff, bidId, newVersion).Scan(&newBid.Id, &newBid.Name, &newBid.Description, &newBid.Status, &newBid.TenderId, &newBid.AuthorType, &newBid.AuthorId, &newBid.Version, &newBid.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
-			return
-		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
 			return
 		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
 		return
 	}
 

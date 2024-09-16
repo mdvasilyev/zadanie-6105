@@ -33,11 +33,7 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 
 	err := db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
 		return
 	}
 

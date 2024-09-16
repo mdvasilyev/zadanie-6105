@@ -45,11 +45,7 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&tender.Id, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.OrganizationId, &tender.CreatorUsername, &tender.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
 		return
 	}
 

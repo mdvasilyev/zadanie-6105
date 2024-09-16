@@ -41,15 +41,11 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&currentVersion, &creatorUsername)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
-			return
-		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
 			return
 		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
 		return
 	}
 
@@ -69,15 +65,11 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGetDiff, tenderId, newVersion).Scan(&newTender.Id, &newTender.Name, &newTender.Description, &newTender.Status, &newTender.ServiceType, &newTender.Version, &newTender.OrganizationId, &newTender.CreatorUsername, &newTender.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
-			return
-		}
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
 			return
 		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
 		return
 	}
 

@@ -38,11 +38,7 @@ func (s *Service) ListMy(db *sql.DB, ctx *gin.Context) {
 
 	err = db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
 		return
 	}
 
@@ -60,11 +56,7 @@ func (s *Service) ListMy(db *sql.DB, ctx *gin.Context) {
 		var b Bid
 		err := rows.Scan(&b.Id, &b.Name, &b.Description, &b.Status, &b.TenderId, &b.AuthorType, &b.AuthorId, &b.Version, &b.CreatedAt)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
-				return
-			}
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 			return
 		}
 		bids = append(bids, b)
