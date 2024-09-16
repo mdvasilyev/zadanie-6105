@@ -3,8 +3,10 @@ package tender
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func validateServiceType(serviceType string) error {
@@ -51,4 +53,32 @@ func extractTenders(ctx *gin.Context, rows *sql.Rows) ([]Tender, bool) {
 		tenders = append(tenders, t)
 	}
 	return tenders, true
+}
+
+func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, username string, tenderId string) (int, bool) {
+	queryGet := "SELECT version, creator_username FROM tender WHERE id = $1"
+
+	var currentVersion int
+	var creatorUsername string
+
+	err := tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&currentVersion, &creatorUsername)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
+			return 0, false
+		}
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
+		return 0, false
+	}
+
+	if version >= currentVersion {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "No such a version. Latest version is " + strconv.Itoa(currentVersion)})
+		return 0, false
+	}
+
+	if username != creatorUsername {
+		ctx.IndentedJSON(http.StatusForbidden, gin.H{"reason": "Wrong username"})
+		return 0, false
+	}
+	return currentVersion, true
 }

@@ -3,8 +3,10 @@ package bid
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 func validateStatus(status string) error {
@@ -56,4 +58,32 @@ func extractBids(ctx *gin.Context, rows *sql.Rows) ([]Bid, bool) {
 		bids = append(bids, b)
 	}
 	return bids, true
+}
+
+func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, authorId string, bidId string) (int, bool) {
+	queryGet := "SELECT version, author_id FROM bid WHERE id = $1"
+
+	var currentVersion int
+	var creatorId string
+
+	err := tx.QueryRowContext(ctx, queryGet, bidId).Scan(&currentVersion, &creatorId)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
+			return 0, false
+		}
+		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
+		return 0, false
+	}
+
+	if version >= currentVersion {
+		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "No such a version. Latest version is " + strconv.Itoa(currentVersion)})
+		return 0, false
+	}
+
+	if authorId != creatorId {
+		ctx.IndentedJSON(http.StatusForbidden, gin.H{"reason": "Wrong username"})
+		return 0, false
+	}
+	return currentVersion, true
 }

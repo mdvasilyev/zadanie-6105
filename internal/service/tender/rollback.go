@@ -34,28 +34,8 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	queryGet := "SELECT version, creator_username FROM tender WHERE id = $1"
-
-	var currentVersion int
-	var creatorUsername string
-
-	err = tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&currentVersion, &creatorUsername)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
-		return
-	}
-
-	if newVersion >= currentVersion {
-		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "No such a version. Latest version is " + strconv.Itoa(currentVersion)})
-		return
-	}
-
-	if username != creatorUsername {
-		ctx.IndentedJSON(http.StatusForbidden, gin.H{"reason": "Wrong username"})
+	currentVersion, ok := checkVersionAndUsername(tx, ctx, newVersion, username, tenderId)
+	if !ok {
 		return
 	}
 
