@@ -37,7 +37,7 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 	}
 
 	newStatus := ctx.Query("status")
-	if err := validateStatus(newStatus); newStatus == "" || err != nil {
+	if err = validateStatus(newStatus); newStatus == "" || err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid status"})
 		return
 	}
@@ -96,7 +96,7 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return
 	}

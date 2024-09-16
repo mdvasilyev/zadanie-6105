@@ -17,7 +17,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 	}
 
 	tender := Tender{}
-	if err := ctx.ShouldBindJSON(&tender); err != nil {
+	if err = ctx.ShouldBindJSON(&tender); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request data"})
 		return
 	}
@@ -46,7 +46,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return
 	}

@@ -44,7 +44,7 @@ func (s *Service) ListMy(db *sql.DB, ctx *gin.Context) {
 	var tenders []Tender
 	for rows.Next() {
 		var t Tender
-		err := rows.Scan(&t.Id, &t.Name, &t.Description, &t.Status, &t.ServiceType, &t.Version, &t.OrganizationId, &t.CreatorUsername, &t.CreatedAt)
+		err = rows.Scan(&t.Id, &t.Name, &t.Description, &t.Status, &t.ServiceType, &t.Version, &t.OrganizationId, &t.CreatorUsername, &t.CreatedAt)
 		if err != nil {
 			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 			return

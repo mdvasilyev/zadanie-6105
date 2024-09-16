@@ -73,7 +73,7 @@ func (s *Service) TenderIdList(db *sql.DB, ctx *gin.Context) {
 	var bids []Bid
 	for rows.Next() {
 		var b Bid
-		err := rows.Scan(&b.Id, &b.Name, &b.Description, &b.Status, &b.TenderId, &b.AuthorType, &b.AuthorId, &b.Version, &b.CreatedAt)
+		err = rows.Scan(&b.Id, &b.Name, &b.Description, &b.Status, &b.TenderId, &b.AuthorType, &b.AuthorId, &b.Version, &b.CreatedAt)
 		if err != nil {
 			ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 			return

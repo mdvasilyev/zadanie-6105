@@ -38,7 +38,7 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 	}
 
 	var bidPatch BidPatch
-	if err := ctx.ShouldBindJSON(&bidPatch); err != nil {
+	if err = ctx.ShouldBindJSON(&bidPatch); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request body"})
 		return
 	}
