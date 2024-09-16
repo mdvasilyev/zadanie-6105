@@ -15,17 +15,14 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	bid := Bid{Version: 1}
+	var bid Bid
 	if err = ctx.ShouldBindJSON(&bid); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request data"})
 		return
 	}
 
-	queryBid := "INSERT INTO bid (name, description, status, tender_id, author_type, author_id, version) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at"
-
-	err = tx.QueryRowContext(ctx, queryBid, bid.Name, bid.Description, BidStatusCreated, bid.TenderId, bid.AuthorType, bid.AuthorId, 1).Scan(&bid.Id, &bid.CreatedAt)
-	if err != nil {
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	bid, ok := insertBid(tx, ctx, bid)
+	if !ok {
 		return
 	}
 

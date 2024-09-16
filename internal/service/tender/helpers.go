@@ -86,6 +86,22 @@ func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, username
 	return currentVersion, true
 }
 
+func insertTender(tx *sql.Tx, ctx *gin.Context, tender Tender) (Tender, bool) {
+	query := "INSERT INTO tender (name, description, status, service_type, version, organization_id, creator_username) VALUES ($1, $2, $3, $4, 1, $5, $6) RETURNING id, created_at"
+
+	err := tx.QueryRowContext(ctx, query, tender.Name, tender.Description, TenderStatusCreated, tender.ServiceType, tender.OrganizationId, tender.CreatorUsername).Scan(&tender.Id, &tender.CreatedAt)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
+			return tender, false
+		}
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		return tender, false
+	}
+
+	return tender, true
+}
+
 func insertTenderDiff(tx *sql.Tx, ctx *gin.Context, tender Tender) bool {
 	query := "INSERT INTO tender_diff (id, name, description, status, service_type, version, organization_id, creator_username, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 

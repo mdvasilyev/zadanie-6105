@@ -111,6 +111,18 @@ func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, authorId
 	return currentVersion, true
 }
 
+func insertBid(tx *sql.Tx, ctx *gin.Context, bid Bid) (Bid, bool) {
+	query := "INSERT INTO bid (name, description, status, tender_id, author_type, author_id, version) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, created_at"
+
+	err := tx.QueryRowContext(ctx, query, bid.Name, bid.Description, BidStatusCreated, bid.TenderId, bid.AuthorType, bid.AuthorId, 1).Scan(&bid.Id, &bid.CreatedAt)
+	if err != nil {
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		return bid, false
+	}
+
+	return bid, true
+}
+
 func insertBidDiff(tx *sql.Tx, ctx *gin.Context, bid Bid) bool {
 	query := "INSERT INTO bid_diff (id, name, description, status, tender_id, author_type, author_id, version, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 

@@ -99,7 +99,7 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return
 	}
