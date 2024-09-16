@@ -54,10 +54,6 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGetDiff, bidId, newVersion).Scan(&newBid.Id, &newBid.Name, &newBid.Description, &newBid.Status, &newBid.TenderId, &newBid.AuthorType, &newBid.AuthorId, &newBid.Version, &newBid.CreatedAt)
 	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Version not found"})
 		return
 	}

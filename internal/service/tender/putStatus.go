@@ -44,10 +44,6 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&tender.Id, &tender.Name, &tender.Description, &tender.Status, &tender.ServiceType, &tender.Version, &tender.OrganizationId, &tender.CreatorUsername, &tender.CreatedAt)
 	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
 		return
 	}

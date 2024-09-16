@@ -3,7 +3,6 @@ package tender
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -63,10 +62,6 @@ func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, username
 
 	err := tx.QueryRowContext(ctx, queryGet, tenderId).Scan(&currentVersion, &creatorUsername)
 	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
-			return 0, false
-		}
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Tender not found"})
 		return 0, false
 	}

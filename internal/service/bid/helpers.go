@@ -3,7 +3,6 @@ package bid
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -68,10 +67,6 @@ func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, authorId
 
 	err := tx.QueryRowContext(ctx, queryGet, bidId).Scan(&currentVersion, &creatorId)
 	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Post failed: %v, unable to rollback: %v\n", err, rollbackErr)})
-			return 0, false
-		}
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 		return 0, false
 	}

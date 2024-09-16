@@ -26,10 +26,6 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 
 	err = tx.QueryRowContext(ctx, queryBid, bid.Name, bid.Description, BidStatusCreated, bid.TenderId, bid.AuthorType, bid.AuthorId, 1).Scan(&bid.Id, &bid.CreatedAt)
 	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return
 	}
