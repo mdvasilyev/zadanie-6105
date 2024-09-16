@@ -87,7 +87,6 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 	}
 
 	queryUpdate := fmt.Sprintf("UPDATE bid SET %s WHERE id = $%d", strings.Join(updates, ", "), paramCounter)
-	queryDiff := "INSERT INTO bid_diff (id, name, description, status, tender_id, author_type, author_id, version, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 
 	params = append(params, bidId)
 
@@ -101,13 +100,7 @@ func (s *Service) Patch(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	_, err = tx.ExecContext(ctx, queryDiff, bid.Id, bid.Name, bid.Description, bid.Status, bid.TenderId, bid.AuthorType, bid.AuthorId, bid.Version+1, bid.CreatedAt)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	if !insertBidDiff(tx, ctx, bid) {
 		return
 	}
 

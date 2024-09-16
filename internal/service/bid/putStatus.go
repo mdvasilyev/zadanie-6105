@@ -75,15 +75,7 @@ func (s *Service) PutStatus(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	queryInsertDiff := "INSERT INTO bid_diff (id, name, description, status, tender_id, author_type, author_id, version, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
-
-	_, err = tx.ExecContext(ctx, queryInsertDiff, bid.Id, bid.Name, bid.Description, newStatus, bid.TenderId, bid.AuthorType, bid.AuthorId, bid.Version+1, bid.CreatedAt)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Failed to rollback: %v", rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	if !insertBidDiff(tx, ctx, bid) {
 		return
 	}
 

@@ -61,15 +61,7 @@ func (s *Service) Rollback(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	queryInsertDiff := "INSERT INTO tender_diff (id, name, description, status, service_type, version, organization_id, creator_username, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
-
-	_, err = tx.ExecContext(ctx, queryInsertDiff, newTender.Id, newTender.Name, newTender.Description, newTender.Status, newTender.ServiceType, newTender.Version+1, newTender.OrganizationId, newTender.CreatorUsername, newTender.CreatedAt)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Failed to rollback: %v", rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	if !insertTenderDiff(tx, ctx, newTender) {
 		return
 	}
 

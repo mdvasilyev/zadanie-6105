@@ -2,7 +2,6 @@ package bid
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -16,7 +15,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	bid := Bid{}
+	bid := Bid{Version: 1}
 	if err = ctx.ShouldBindJSON(&bid); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request data"})
 		return
@@ -30,15 +29,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	queryBidDiff := "INSERT INTO bid_diff (id, name, description, status, tender_id, author_type, author_id, version, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
-
-	_, err = tx.ExecContext(ctx, queryBidDiff, bid.Id, bid.Name, bid.Description, BidStatusCreated, bid.TenderId, bid.AuthorType, bid.AuthorId, 1, bid.CreatedAt)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	if !insertBidDiff(tx, ctx, bid) {
 		return
 	}
 

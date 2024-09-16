@@ -16,7 +16,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	tender := Tender{}
+	tender := Tender{Version: 1}
 	if err = ctx.ShouldBindJSON(&tender); err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, gin.H{"reason": "Invalid request data"})
 		return
@@ -34,15 +34,7 @@ func (s *Service) Add(db *sql.DB, ctx *gin.Context) {
 		return
 	}
 
-	queryTenderDiff := "INSERT INTO tender_diff (id, name, description, status, service_type, version, organization_id, creator_username, created_at) VALUES ($1, $2, $3, $4, $5, 1, $6, $7, $8)"
-
-	_, err = tx.ExecContext(ctx, queryTenderDiff, tender.Id, tender.Name, tender.Description, TenderStatusCreated, tender.ServiceType, tender.OrganizationId, tender.CreatorUsername, tender.CreatedAt)
-	if err != nil {
-		if rollbackErr := tx.Rollback(); rollbackErr != nil {
-			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("err: %v, rollbackErr: %v", err, rollbackErr)})
-			return
-		}
-		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+	if !insertTenderDiff(tx, ctx, tender) {
 		return
 	}
 

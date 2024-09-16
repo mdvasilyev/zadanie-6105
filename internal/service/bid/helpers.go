@@ -3,6 +3,7 @@ package bid
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -13,14 +14,16 @@ func validateStatus(status string) error {
 	case BidStatusCreated, BidStatusPublished, BidStatusCancelled:
 		return nil
 	}
+
 	return errors.New("invalid status")
 }
 
 func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
 	var userExists bool
 
-	checkUserQuery := `SELECT EXISTS(SELECT 1 FROM employee WHERE username = $1)`
-	err := db.QueryRow(checkUserQuery, username).Scan(&userExists)
+	query := `SELECT EXISTS(SELECT 1 FROM employee WHERE username = $1)`
+
+	err := db.QueryRow(query, username).Scan(&userExists)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
 		return false
@@ -29,24 +32,27 @@ func checkUserExistence(db *sql.DB, ctx *gin.Context, username string) bool {
 		ctx.IndentedJSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
 		return false
 	}
+
 	return true
 }
 
 func getAuthorId(db *sql.DB, ctx *gin.Context, username string) (string, bool) {
 	var authorId string
 
-	getAuthorIDQuery := `SELECT id FROM employee WHERE username = $1`
+	query := `SELECT id FROM employee WHERE username = $1`
 
-	err := db.QueryRow(getAuthorIDQuery, username).Scan(&authorId)
+	err := db.QueryRow(query, username).Scan(&authorId)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"reason": "Unauthorized user"})
 		return "", false
 	}
+
 	return authorId, true
 }
 
 func extractBids(ctx *gin.Context, rows *sql.Rows) ([]Bid, bool) {
 	var bids []Bid
+
 	for rows.Next() {
 		var b Bid
 		err := rows.Scan(&b.Id, &b.Name, &b.Description, &b.Status, &b.TenderId, &b.AuthorType, &b.AuthorId, &b.Version, &b.CreatedAt)
@@ -56,16 +62,17 @@ func extractBids(ctx *gin.Context, rows *sql.Rows) ([]Bid, bool) {
 		}
 		bids = append(bids, b)
 	}
+
 	return bids, true
 }
 
 func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, authorId string, bidId string) (int, bool) {
-	queryGet := "SELECT version, author_id FROM bid WHERE id = $1"
+	query := "SELECT version, author_id FROM bid WHERE id = $1"
 
 	var currentVersion int
 	var creatorId string
 
-	err := tx.QueryRowContext(ctx, queryGet, bidId).Scan(&currentVersion, &creatorId)
+	err := tx.QueryRowContext(ctx, query, bidId).Scan(&currentVersion, &creatorId)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusNotFound, gin.H{"reason": "Bid not found"})
 		return 0, false
@@ -80,5 +87,22 @@ func checkVersionAndUsername(tx *sql.Tx, ctx *gin.Context, version int, authorId
 		ctx.IndentedJSON(http.StatusForbidden, gin.H{"reason": "Wrong username"})
 		return 0, false
 	}
+
 	return currentVersion, true
+}
+
+func insertBidDiff(tx *sql.Tx, ctx *gin.Context, bid Bid) bool {
+	query := "INSERT INTO bid_diff (id, name, description, status, tender_id, author_type, author_id, version, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+
+	_, err := tx.ExecContext(ctx, query, bid.Id, bid.Name, bid.Description, bid.Status, bid.AuthorType, bid.AuthorId, bid.Version+1, bid.CreatedAt)
+	if err != nil {
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": fmt.Sprintf("Failed to rollback: %v", rollbackErr)})
+			return false
+		}
+		ctx.IndentedJSON(http.StatusInternalServerError, gin.H{"reason": err.Error()})
+		return false
+	}
+
+	return true
 }
