@@ -26,25 +26,26 @@ func main() {
 
 	router := gin.Default()
 
-	apiGroup := router.Group("/api")
+	tenderGroup := router.Group("/api/tenders")
+	bidGroup := router.Group("/api/bids")
 
-	apiGroup.GET("/ping", commander.Ping)
+	router.GET("/api/ping", commander.Ping)
 
-	apiGroup.GET("/tenders", commander.ListAllTenders)
-	apiGroup.GET("/tenders/my", commander.ListMyTenders)
-	apiGroup.POST("/tenders/new", commander.AddTender)
-	apiGroup.GET("/tenders/:tenderId/status", commander.TenderStatus)
-	apiGroup.PUT("/tenders/:tenderId/status", commander.PutTenderStatus)
-	apiGroup.PATCH("/tenders/:tenderId/edit", commander.PatchTender)
-	apiGroup.PUT("/tenders/:tenderId/rollback/:version", commander.TenderRollback)
+	tenderGroup.GET("", commander.ListAllTenders)
+	tenderGroup.GET("/my", commander.ListMyTenders)
+	tenderGroup.POST("/new", commander.AddTender)
+	tenderGroup.GET("/:tenderId/status", commander.TenderStatus)
+	tenderGroup.PUT("/:tenderId/status", commander.PutTenderStatus)
+	tenderGroup.PATCH("/:tenderId/edit", commander.PatchTender)
+	tenderGroup.PUT("/:tenderId/rollback/:version", commander.TenderRollback)
 
-	apiGroup.POST("/bids/new", commander.AddBid)
-	apiGroup.GET("/bids/my", commander.ListMy)
-	apiGroup.GET("/bids/tender/:tenderId/list", commander.TenderIdList)
-	apiGroup.GET("/bids/:bidId/status", commander.BidStatus)
-	apiGroup.PUT("/bids/:bidId/status", commander.PutBidStatus)
-	apiGroup.PATCH("/bids/:bidId/edit", commander.PatchBid)
-	apiGroup.PUT("/bids/:bidId/rollback/:version", commander.BidRollback)
+	bidGroup.POST("/new", commander.AddBid)
+	bidGroup.GET("/my", commander.ListMy)
+	bidGroup.GET("/tender/:tenderId/list", commander.TenderIdList)
+	bidGroup.GET("/:bidId/status", commander.BidStatus)
+	bidGroup.PUT("/:bidId/status", commander.PutBidStatus)
+	bidGroup.PATCH("/:bidId/edit", commander.PatchBid)
+	bidGroup.PUT("/bids/:bidId/rollback/:version", commander.BidRollback)
 
 	err := router.Run(serverAddress)
 	if err != nil {
